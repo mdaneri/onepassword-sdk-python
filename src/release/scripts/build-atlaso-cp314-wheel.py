@@ -25,6 +25,7 @@ from pathlib import Path, PurePosixPath
 
 PACKAGE_VERSION = "0.4.1"
 SOURCE_DATE_EPOCH = "1785419723"
+BUILD_PYTHON = (3, 14, 7)
 RELEASE_TAG = "atlaso-wheel-v0.4.1-cp314.2"
 PURELIB_PREFIX = "onepassword_sdk-0.4.1.data/purelib/"
 MAX_DOWNLOAD_BYTES = 40 * 1024 * 1024
@@ -151,8 +152,8 @@ def _assert_runtime(specification: dict[str, object]) -> None:
     machine = platform.machine().lower()
     if machine not in specification["machines"]:
         raise SystemExit(f"target requires {specification['machines']}, found {machine}")
-    if sys.version_info[:2] != (3, 14) or struct.calcsize("P") != 8:
-        raise SystemExit("compatibility wheels require 64-bit CPython 3.14")
+    if sys.version_info[:3] != BUILD_PYTHON or struct.calcsize("P") != 8:
+        raise SystemExit("compatibility wheels require 64-bit CPython 3.14.7")
     if sysconfig.get_config_var("Py_GIL_DISABLED") not in (None, 0, "0", ""):
         raise SystemExit("free-threaded CPython is not supported")
     if "free-thread" in sys.version.lower():

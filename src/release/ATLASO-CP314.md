@@ -10,8 +10,10 @@ matrix mirrors every platform shipped by upstream 0.4.1:
 
 These are not official 1Password releases and are never uploaded to PyPI.
 
-The release workflow rebuilds the exact PyPI source distribution twice for
-each target on native hosted runners and requires byte-identical output. It
+The release workflow rebuilds the exact PyPI source distribution twice with
+CPython 3.14.7 for each target on native hosted runners and requires
+byte-identical output. Pinning the patch release prevents runner image rollout
+timing from changing the recorded build runtime between replicas. It
 compares each packaged native library and generated UniFFI binding with the
 matching official CPython 3.13 wheel, performs a native import and FFI contract
 check, scans all verified inputs, extracted files, native libraries, and
