@@ -1,4 +1,4 @@
-name: Build Atlaso CPython 3.14 wheel
+name: Build Atlaso CPython 3.14 wheels
 
 on:
   pull_request:
@@ -23,7 +23,7 @@ on:
         default: false
         type: boolean
       live_validation_json:
-        description: Canonical sanitized live-validation JSON; required for publication
+        description: Canonical sanitized Windows live-validation JSON; required for publication
         required: false
         type: string
 
@@ -36,12 +36,52 @@ concurrency:
 
 jobs:
   build:
-    name: Independent build ${{ matrix.replica }}
+    name: Build ${{ matrix.target }} replica ${{ matrix.replica }}
     strategy:
       fail-fast: true
       matrix:
-        replica: [a, b]
-    runs-on: windows-latest
+        include:
+          - target: windows-x86_64
+            replica: a
+            runner: windows-2025
+            python-architecture: x64
+          - target: windows-x86_64
+            replica: b
+            runner: windows-2025
+            python-architecture: x64
+          - target: macos-x86_64
+            replica: a
+            runner: macos-15-intel
+            python-architecture: x64
+          - target: macos-x86_64
+            replica: b
+            runner: macos-15-intel
+            python-architecture: x64
+          - target: macos-arm64
+            replica: a
+            runner: macos-15
+            python-architecture: arm64
+          - target: macos-arm64
+            replica: b
+            runner: macos-15
+            python-architecture: arm64
+          - target: manylinux-x86_64
+            replica: a
+            runner: ubuntu-24.04
+            python-architecture: x64
+          - target: manylinux-x86_64
+            replica: b
+            runner: ubuntu-24.04
+            python-architecture: x64
+          - target: manylinux-aarch64
+            replica: a
+            runner: ubuntu-24.04-arm
+            python-architecture: arm64
+          - target: manylinux-aarch64
+            replica: b
+            runner: ubuntu-24.04-arm
+            python-architecture: arm64
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Harden the runner
         uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
@@ -51,13 +91,14 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           persist-credentials: false
-      - name: Set up standard CPython 3.14 x64
+      - name: Set up standard CPython 3.14
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
-          architecture: x64
+          architecture: ${{ matrix.python-architecture }}
           allow-prereleases: false
-      - name: Install exact build tools
+      - name: Install exact build tools on Windows
+        if: runner.os == 'Windows'
         shell: pwsh
         env:
           PIP_CONFIG_FILE: ${{ runner.temp }}\empty-pip.ini
@@ -68,34 +109,55 @@ jobs:
             --require-hashes `
             --no-deps `
             --requirement src/release/atlaso-cp314-build-requirements.txt
-      - name: Build and verify the wheel
+      - name: Install exact build tools on macOS or Linux
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          PIP_CONFIG_FILE: ${{ runner.temp }}/empty-pip.ini
+          PIP_DISABLE_PIP_VERSION_CHECK: '1'
+        run: |
+          set -euo pipefail
+          : > "$PIP_CONFIG_FILE"
+          python -I -m pip install \
+            --require-hashes \
+            --no-deps \
+            --requirement src/release/atlaso-cp314-build-requirements.txt
+      - name: Build and verify the wheel on Windows
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           python -I src/release/scripts/build-atlaso-cp314-wheel.py build `
-            --output "${{ runner.temp }}\candidate-${{ matrix.replica }}"
-      - name: Scan all candidate inputs and outputs with Microsoft Defender
-        shell: pwsh
+            --target '${{ matrix.target }}' `
+            --output '${{ runner.temp }}\candidate-${{ matrix.target }}-${{ matrix.replica }}'
+      - name: Build and verify the wheel on macOS or Linux
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
-          $defender = Get-ChildItem `
-            -LiteralPath 'C:\ProgramData\Microsoft\Windows Defender\Platform' `
-            -Filter MpCmdRun.exe -Recurse -File | Sort-Object FullName -Descending | Select-Object -First 1
-          if (-not $defender) { throw 'Microsoft Defender command-line scanner is unavailable.' }
-          & $defender.FullName -SignatureUpdate
-          if ($LASTEXITCODE -ne 0) { throw "Microsoft Defender signature update failed: $LASTEXITCODE" }
-          & $defender.FullName -Scan -ScanType 3 -File "${{ runner.temp }}\candidate-${{ matrix.replica }}"
-          if ($LASTEXITCODE -ne 0) { throw "Microsoft Defender rejected the candidate: $LASTEXITCODE" }
+          set -euo pipefail
+          python -I src/release/scripts/build-atlaso-cp314-wheel.py build \
+            --target '${{ matrix.target }}' \
+            --output '${{ runner.temp }}/candidate-${{ matrix.target }}-${{ matrix.replica }}'
       - name: Upload the independent candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: atlaso-cp314-${{ matrix.replica }}
-          path: ${{ runner.temp }}\candidate-${{ matrix.replica }}
+          name: atlaso-cp314-${{ matrix.target }}-${{ matrix.replica }}
+          path: ${{ runner.temp }}/candidate-${{ matrix.target }}-${{ matrix.replica }}
           if-no-files-found: error
           retention-days: 7
 
   reconcile:
-    name: Reconcile independent candidates
+    name: Reconcile ${{ matrix.target }}
     needs: build
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        target:
+          - windows-x86_64
+          - macos-x86_64
+          - macos-arm64
+          - manylinux-x86_64
+          - manylinux-aarch64
+    runs-on: ubuntu-24.04
     steps:
       - name: Harden the runner
         uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
@@ -108,20 +170,72 @@ jobs:
       - name: Download candidate A
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: atlaso-cp314-a
+          name: atlaso-cp314-${{ matrix.target }}-a
           path: ${{ runner.temp }}/candidate-a
       - name: Download candidate B
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: atlaso-cp314-b
+          name: atlaso-cp314-${{ matrix.target }}-b
           path: ${{ runner.temp }}/candidate-b
-      - name: Require byte-identical output and assemble release metadata
+      - name: Require byte-identical output
+        shell: bash
         run: |
+          set -euo pipefail
           python -I src/release/scripts/build-atlaso-cp314-wheel.py assemble \
-            --first "${{ runner.temp }}/candidate-a" \
-            --second "${{ runner.temp }}/candidate-b" \
-            --output "${{ runner.temp }}/release"
-      - name: Upload the reconciled release candidate
+            --target '${{ matrix.target }}' \
+            --first '${{ runner.temp }}/candidate-a' \
+            --second '${{ runner.temp }}/candidate-b' \
+            --output '${{ runner.temp }}/reconciled'
+      - name: Upload the reconciled target
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: atlaso-cp314-reconciled-${{ matrix.target }}
+          path: ${{ runner.temp }}/reconciled
+          if-no-files-found: error
+          retention-days: 30
+
+  bundle:
+    name: Scan and bundle verified wheels
+    needs: reconcile
+    runs-on: windows-2025
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+      - name: Check out the bundle recipe
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Download every reconciled target
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: atlaso-cp314-reconciled-*
+          path: ${{ runner.temp }}\inputs
+      - name: Assemble canonical provenance and SBOM
+        shell: pwsh
+        run: |
+          python -I src/release/scripts/build-atlaso-cp314-wheel.py bundle `
+            --input-root '${{ runner.temp }}\inputs' `
+            --output '${{ runner.temp }}\release'
+          python -I src/release/scripts/build-atlaso-cp314-wheel.py stage-scan-materials `
+            --output '${{ runner.temp }}\scan-materials'
+      - name: Scan verified inputs, extracted files, native libraries, and wheels
+        shell: pwsh
+        run: |
+          $defender = Get-ChildItem `
+            -LiteralPath 'C:\ProgramData\Microsoft\Windows Defender\Platform' `
+            -Filter MpCmdRun.exe -Recurse -File |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+          if (-not $defender) { throw 'Microsoft Defender command-line scanner is unavailable.' }
+          & $defender.FullName -SignatureUpdate
+          if ($LASTEXITCODE -ne 0) { throw "Microsoft Defender signature update failed: $LASTEXITCODE" }
+          foreach ($path in @('${{ runner.temp }}\scan-materials', '${{ runner.temp }}\release')) {
+            & $defender.FullName -Scan -ScanType 3 -File $path
+            if ($LASTEXITCODE -ne 0) { throw "Microsoft Defender rejected ${path}: $LASTEXITCODE" }
+          }
+      - name: Upload the release candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: atlaso-cp314-release
@@ -131,9 +245,9 @@ jobs:
 
   publish:
     name: Attest and publish immutable release
-    needs: reconcile
+    needs: bundle
     if: github.event_name == 'workflow_dispatch' && inputs.publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       attestations: write
       contents: write
@@ -147,15 +261,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           test "$GITHUB_REF" = refs/heads/main
           test "$(gh api "repos/${{ github.repository }}/branches/main" --jq .protected)" = true
-          ! gh release view atlaso-wheel-v0.4.1-cp314.1 --repo "${{ github.repository }}"
-      - name: Download the reconciled release candidate
+          ! gh release view atlaso-wheel-v0.4.1-cp314.2 --repo "${{ github.repository }}"
+      - name: Download the release candidate
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: atlaso-cp314-release
           path: ${{ runner.temp }}/release
-      - name: Validate and record sanitized live evidence
+      - name: Validate and record sanitized Windows live evidence
         env:
           LIVE_VALIDATION_JSON: ${{ inputs.live_validation_json }}
         run: |
@@ -171,47 +286,57 @@ jobs:
               'secret_values_recorded': False,
           }
           if any(evidence.get(key) != value for key, value in required.items()):
-              raise SystemExit('live validation does not match the exact artifact and required outcomes')
-          if set(evidence) != set(required) | {'validated_at', 'validator'}:
-              raise SystemExit('live validation contains unexpected fields')
+              raise SystemExit('live validation does not match the Windows artifact and required outcomes')
+          allowed = set(required) | {'validated_at', 'validator', 'target'}
+          if set(evidence) - allowed or evidence.get('target', 'windows-x86_64') != 'windows-x86_64':
+              raise SystemExit('live validation contains unexpected fields or target')
+          evidence['target'] = 'windows-x86_64'
           root.joinpath('live-validation.json').write_text(
               json.dumps(evidence, ensure_ascii=True, separators=(',', ':'), sort_keys=True) + '\n',
               encoding='utf-8', newline='\n')
           PY
-      - name: Attest build provenance
+      - name: Attest build provenance for every wheel
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          subject-path: ${{ runner.temp }}/release/onepassword_sdk-0.4.1-cp314-cp314-win_amd64.whl
-      - name: Attest the SPDX SBOM
+          subject-path: ${{ runner.temp }}/release/*.whl
+      - name: Attest the aggregate SPDX SBOM
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          subject-path: ${{ runner.temp }}/release/onepassword_sdk-0.4.1-cp314-cp314-win_amd64.whl
+          subject-path: ${{ runner.temp }}/release/*.whl
           sbom-path: ${{ runner.temp }}/release/sbom.spdx.json
       - name: Publish the immutable compatibility release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           cat > "${{ runner.temp }}/release-notes.md" <<'EOF'
-          Temporary Atlaso compatibility artifact for Windows x86-64 CPython 3.14.
+          Temporary Atlaso compatibility artifacts for standard CPython 3.14 on
+          Windows x86-64, macOS x86-64 and ARM64, and manylinux x86-64 and AArch64.
 
           This is not an official 1Password release and is not published to PyPI.
           It repackages the exact onepassword-sdk 0.4.1 PyPI source distribution,
           preserves the upstream MIT license, and is tracked by upstream issue #244
           and Atlaso issue #610.
+
+          Each target was built twice on its native architecture, required to be
+          byte-identical, compared with the matching official CPython 3.13 native
+          library and UniFFI binding, and subjected to native import/FFI checks.
+          Sanitized desktop authorization evidence covers the Windows artifact;
+          the macOS and Linux artifacts have no secret-backed live validation.
           EOF
-          gh release create atlaso-wheel-v0.4.1-cp314.1 \
+          gh release create atlaso-wheel-v0.4.1-cp314.2 \
             --repo "${{ github.repository }}" \
             --target "$GITHUB_SHA" \
             --draft \
-            --title 'Atlaso CPython 3.14 compatibility wheel for onepassword-sdk 0.4.1' \
+            --title 'Atlaso CPython 3.14 compatibility wheels for onepassword-sdk 0.4.1' \
             --notes-file "${{ runner.temp }}/release-notes.md" \
-            "${{ runner.temp }}/release/onepassword_sdk-0.4.1-cp314-cp314-win_amd64.whl" \
+            "${{ runner.temp }}/release/"*.whl \
             "${{ runner.temp }}/release/provenance.json" \
             "${{ runner.temp }}/release/sbom.spdx.json" \
             "${{ runner.temp }}/release/live-validation.json" \
             "${{ runner.temp }}/release/LICENSE"
-          gh release edit atlaso-wheel-v0.4.1-cp314.1 \
+          gh release edit atlaso-wheel-v0.4.1-cp314.2 \
             --repo "${{ github.repository }}" \
             --draft=false
-          test "$(gh release view atlaso-wheel-v0.4.1-cp314.1 \
+          test "$(gh release view atlaso-wheel-v0.4.1-cp314.2 \
             --repo "${{ github.repository }}" --json isImmutable --jq .isImmutable)" = true
