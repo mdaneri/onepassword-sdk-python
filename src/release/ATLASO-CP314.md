@@ -1,8 +1,8 @@
 # Atlaso CPython 3.14 compatibility wheel
 
 This fork publishes temporary standard CPython 3.14 wheels for
-`onepassword-sdk 0.4.1` on behalf of the Atlaso project. The compatibility
-matrix mirrors every platform shipped by upstream 0.4.1:
+`onepassword-sdk 0.4.2` on behalf of the Atlaso project. The compatibility
+matrix mirrors every platform shipped by upstream 0.4.2:
 
 - Windows x86-64;
 - macOS x86-64 and ARM64; and
@@ -21,9 +21,9 @@ completed wheels, emits one aggregate SPDX SBOM, and records canonical GitHub
 build provenance. The package name and version remain unchanged.
 
 The compatibility release exists only until 1Password publishes the eligible
-official CPython 3.14 wheel set. The immutable Windows-only `.1` release remains
-available for existing consumers; the complete five-target matrix is published
-under the new immutable `.2` release. Upstream support is tracked by
+official CPython 3.14 wheel set. Existing immutable 0.4.1 releases remain
+available for their current consumers. The five-target 0.4.2 matrix uses
+the `atlaso-wheel-v0.4.2-cp314.1` release tag. Upstream support is tracked by
 [1Password/onepassword-sdk-python#244](https://github.com/1Password/onepassword-sdk-python/issues/244),
 and Atlaso integration is tracked by
 [mdaneri/Atlaso#610](https://github.com/mdaneri/Atlaso/issues/610).

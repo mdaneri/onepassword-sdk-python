@@ -23,17 +23,17 @@ from datetime import UTC, datetime
 from email.parser import BytesParser
 from pathlib import Path, PurePosixPath
 
-PACKAGE_VERSION = "0.4.1"
-SOURCE_DATE_EPOCH = "1785419723"
+PACKAGE_VERSION = "0.4.2"
+SOURCE_DATE_EPOCH = "1792700123"
 BUILD_PYTHON = (3, 14, 7)
-RELEASE_TAG = "atlaso-wheel-v0.4.1-cp314.2"
-PURELIB_PREFIX = "onepassword_sdk-0.4.1.data/purelib/"
+RELEASE_TAG = "atlaso-wheel-v0.4.2-cp314.1"
+PURELIB_PREFIX = "onepassword_sdk-0.4.2.data/purelib/"
 MAX_DOWNLOAD_BYTES = 40 * 1024 * 1024
 SDIST = {
-    "filename": "onepassword_sdk-0.4.1.tar.gz",
-    "url": "https://files.pythonhosted.org/packages/df/06/989f5b40e802e11e37c44bc72faabcdd362dcba3392fbfc48be6da49e147/onepassword_sdk-0.4.1.tar.gz",
-    "sha256": "4b9224208aa6e35e13bad8534e6521d3abf5ba166ea4efd370fcdc918c4a4d26",
-    "size": 34561961,
+    "filename": "onepassword_sdk-0.4.2.tar.gz",
+    "url": "https://files.pythonhosted.org/packages/e4/e7/cb26b13a2ce863719d5d48993e8929fe28c450ce04044367cf45f5694d8f/onepassword_sdk-0.4.2.tar.gz",
+    "sha256": "fbe98d7e16e16952d1e34d75f2674899cec91d3b26de975168a60b07dc5e6a84",
+    "size": 34545111,
 }
 TARGETS = {
     "windows-x86_64": {
@@ -46,10 +46,10 @@ TARGETS = {
         "library": "onepassword/lib/x86_64/op_uniffi_core.dll",
         "binding": "onepassword/lib/x86_64/op_uniffi_core.py",
         "official": {
-            "filename": "onepassword_sdk-0.4.1-cp313-cp313-win_amd64.whl",
-            "url": "https://files.pythonhosted.org/packages/00/e6/c795eebd51be8cf70f61577d44eccb345df012d1bd036e7545dace0f944d/onepassword_sdk-0.4.1-cp313-cp313-win_amd64.whl",
-            "sha256": "45c2a2751017bd43697f949aea74efcd3058b2395dfa5d94c33adfb7ef96a60a",
-            "size": 6140433,
+            "filename": "onepassword_sdk-0.4.2-cp313-cp313-win_amd64.whl",
+            "url": "https://files.pythonhosted.org/packages/c0/81/70435e71bb826578b410914c7118db12b0d019c81c45ec0d47cbc880b067/onepassword_sdk-0.4.2-cp313-cp313-win_amd64.whl",
+            "sha256": "12c66e46852bf158fa2146a9ef9cc6f3cd65d955bcc98ca6de6575e14e207e8e",
+            "size": 6140435,
         },
     },
     "macos-x86_64": {
@@ -62,10 +62,10 @@ TARGETS = {
         "library": "onepassword/lib/x86_64/libop_uniffi_core.dylib",
         "binding": "onepassword/lib/x86_64/op_uniffi_core.py",
         "official": {
-            "filename": "onepassword_sdk-0.4.1-cp313-cp313-macosx_10_13_x86_64.whl",
-            "url": "https://files.pythonhosted.org/packages/c3/1d/fec27ec00105ada1baa0ed529925e213c87261da9e4bda8997ecb80f4361/onepassword_sdk-0.4.1-cp313-cp313-macosx_10_13_x86_64.whl",
-            "sha256": "3ab99159b0680781c29103e8a481487a7cbe307d80ca82d1ebe1696482717dbf",
-            "size": 7310375,
+            "filename": "onepassword_sdk-0.4.2-cp313-cp313-macosx_10_13_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/a7/1a/ac6809f75daf16d13bb31e257b03d9425375eabd1ddc67840727eaacda9f/onepassword_sdk-0.4.2-cp313-cp313-macosx_10_13_x86_64.whl",
+            "sha256": "7fcdb8f99931d2e8a7dee7b9ffd37f5cceea6eabd7305a59488d56a46a21c11b",
+            "size": 7310376,
         },
     },
     "macos-arm64": {
@@ -78,10 +78,10 @@ TARGETS = {
         "library": "onepassword/lib/aarch64/libop_uniffi_core.dylib",
         "binding": "onepassword/lib/aarch64/op_uniffi_core.py",
         "official": {
-            "filename": "onepassword_sdk-0.4.1-cp313-cp313-macosx_11_0_arm64.whl",
-            "url": "https://files.pythonhosted.org/packages/bc/22/aa06e570c0477a5ab05635f3f216158012bcb6a2a77a85da97d6e598fc0f/onepassword_sdk-0.4.1-cp313-cp313-macosx_11_0_arm64.whl",
-            "sha256": "e08741964f94b257ac843b01fbb260fa1ecea1da33e33132c27c33a001d1f750",
-            "size": 7030317,
+            "filename": "onepassword_sdk-0.4.2-cp313-cp313-macosx_11_0_arm64.whl",
+            "url": "https://files.pythonhosted.org/packages/d5/f5/2cb84df8d0050a24f1e867ad0db32adb474e1d09a91e9ec69c260d1d410d/onepassword_sdk-0.4.2-cp313-cp313-macosx_11_0_arm64.whl",
+            "sha256": "7320c142d51d3fca9483a9392a85e07e5cbdb1cb21f42f9e0e7920bcf087b606",
+            "size": 7030318,
         },
     },
     "manylinux-x86_64": {
@@ -94,10 +94,10 @@ TARGETS = {
         "library": "onepassword/lib/x86_64/libop_uniffi_core.so",
         "binding": "onepassword/lib/x86_64/op_uniffi_core.py",
         "official": {
-            "filename": "onepassword_sdk-0.4.1-cp313-cp313-manylinux_2_32_x86_64.whl",
-            "url": "https://files.pythonhosted.org/packages/71/be/2b669a038881f98512587c512821a50d78b4eae8aa380253d35808643852/onepassword_sdk-0.4.1-cp313-cp313-manylinux_2_32_x86_64.whl",
-            "sha256": "438f3d11cc8ce74fb8fa06d6fe8ecb9c8f72ee1490a0ebd2e3f6029d61c3157c",
-            "size": 7298314,
+            "filename": "onepassword_sdk-0.4.2-cp313-cp313-manylinux_2_32_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/ee/ff/4e4876a66a87727b6cdfd591c6b136e966ac31ca6ee16bf5935261749f2f/onepassword_sdk-0.4.2-cp313-cp313-manylinux_2_32_x86_64.whl",
+            "sha256": "35cbf6eeaa1c7c13a73c0c1400ecfb6e48a30f5ecc27de67df9432cbff3e6cc3",
+            "size": 7289753,
         },
     },
     "manylinux-aarch64": {
@@ -110,10 +110,10 @@ TARGETS = {
         "library": "onepassword/lib/aarch64/libop_uniffi_core.so",
         "binding": "onepassword/lib/aarch64/op_uniffi_core.py",
         "official": {
-            "filename": "onepassword_sdk-0.4.1-cp313-cp313-manylinux_2_32_aarch64.whl",
-            "url": "https://files.pythonhosted.org/packages/34/23/d7e0adf4e619904e3be43084ba6bd607ce33dc46798f7c2a52c8d99af3a1/onepassword_sdk-0.4.1-cp313-cp313-manylinux_2_32_aarch64.whl",
-            "sha256": "55426aa708316698739babd87693d99312eeb3fbf45a429f467014b4c171d578",
-            "size": 7098627,
+            "filename": "onepassword_sdk-0.4.2-cp313-cp313-manylinux_2_32_aarch64.whl",
+            "url": "https://files.pythonhosted.org/packages/f9/7e/676ea710ccbab6c0cba610dc6091ebce67f70be4d50671e865e13b0f43d6/onepassword_sdk-0.4.2-cp313-cp313-manylinux_2_32_aarch64.whl",
+            "sha256": "4ff73f3bdeb6633be57281078c3e9fe774e925f980a666ef42119689e0dd03b9",
+            "size": 7094409,
         },
     },
 }
@@ -353,9 +353,9 @@ def build(output: Path, target_name: str) -> None:
             "source": {"cp313_wheel": official_specification, "sdist": SDIST},
             "target": target_name,
             "upstream": {
-                "commit": "50b2adadef5d1cd6b71c387ea36599af62318100",
+                "commit": "5cca07581766bbd03a4011cc65e1d4187a0dd378",
                 "repository": "1Password/onepassword-sdk-python",
-                "tag": "v0.4.1",
+                "tag": "v0.4.2",
             },
             "version": PACKAGE_VERSION,
         }
